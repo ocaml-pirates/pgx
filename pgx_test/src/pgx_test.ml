@@ -469,6 +469,17 @@ module Make_tests (IO : Pgx.IO) = struct
               | _ -> assert false))
           >>| List.iter (fun () -> ())
         )
+      ; "UTF-8 round-trip", (fun () ->
+          (* TODO: We should probably add more round-trip tests *)
+          let expect = "test-ä-test" in
+          with_conn (fun db ->
+            execute db ~params:[ Pgx.Value.of_string expect ]
+              "SELECT $1"
+            >>| function
+            | [[ result ]] -> assert_equal (Some expect) (Pgx.Value.to_string result)
+            | _ -> assert false
+          )
+        )
       ] in
     make_tests "pgx_async" tests
     >>| run_test_tt_main ~exit
